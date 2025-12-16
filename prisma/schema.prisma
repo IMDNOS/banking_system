@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// ENUMS
+// =========================
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  SUSPENDED
+  CLOSED
+}
+
+enum AccountCategory {
+  SAVINGS
+  CHECKING
+  LOAN
+  INVESTMENT
+}
+
+enum UserRole {
+  CUSTOMER
+  TELLER
+  MANAGER
+  ADMIN
+}
+
+// =========================
+// MODELS
+// =========================
+
+model User {
+  id            String   @id @default(uuid())
+  full_name     String
+  email         String   @unique
+  password_hash String
+  role          UserRole
+
+  accounts Account[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id             String          @id @default(uuid())
+  account_number String          @unique
+  balance        Decimal         @default(0.0)
+  status         AccountStatus   @default(ACTIVE)
+  category       AccountCategory
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  parentAccountId String?
+  parentAccount   Account?  @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
+  subAccounts     Account[] @relation("AccountHierarchy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
