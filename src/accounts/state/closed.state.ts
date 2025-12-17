@@ -15,4 +15,12 @@ export class ClosedState implements AccountState {
   changeStatus(): AccountStatus {
     return AccountStatus.CLOSED;
   }
+
+  deposit(): Decimal {
+    throw new ConflictException('Closed account is immutable');
+  }
+  withdraw(): Decimal {
+    throw new ConflictException('Closed account is immutable');
+  }
+
 }

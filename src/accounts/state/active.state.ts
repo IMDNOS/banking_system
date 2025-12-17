@@ -18,4 +18,15 @@ export class ActiveState implements AccountState {
   changeStatus(newStatus: AccountStatus): AccountStatus {
     return newStatus;
   }
+
+  deposit(balance: Decimal, amount: Decimal): Decimal {
+    return balance.add(amount);
+  }
+
+  withdraw(balance: Decimal, amount: Decimal): Decimal {
+    if (balance.lt(amount)) {
+      throw new ConflictException('Insufficient funds');
+    }
+    return balance.sub(amount);
+  }
 }

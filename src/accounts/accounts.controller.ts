@@ -36,14 +36,14 @@ export class AccountsController {
     return this.accounts.getAccountsForUser(req.user);
   }
 
-  @Patch(':id')
-  updateAccount(
-    @Param('id') accountId: string,
-    @Req() req: any,
-    @Body() dto: UpdateAccountDto,
-  ) {
-    return this.accounts.updateAccount(accountId, dto, req.user);
-  }
+  // @Patch(':id')
+  // updateAccount(
+  //   @Param('id') accountId: string,
+  //   @Req() req: any,
+  //   @Body() dto: UpdateAccountDto,
+  // ) {
+  //   return this.accounts.updateAccount(accountId, dto, req.user);
+  // }
 
   @Post(':id/close')
   @Roles(UserRole.CUSTOMER, UserRole.MANAGER)
@@ -67,7 +67,7 @@ export class AccountsController {
 
   @Post(':id/close-hierarchy')
   @Roles(UserRole.CUSTOMER, UserRole.MANAGER)
-  closeHierarchy(@Param('id') id: string, @Req() req: any) {
+  closeHierarchy(@Param('id') id: string, @Req() req:any) {
     return this.accounts.closeAccountHierarchy(id, req.user);
   }
 

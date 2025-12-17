@@ -18,4 +18,11 @@ export class FrozenState implements AccountState {
   changeStatus(newStatus: AccountStatus): AccountStatus {
     return newStatus;
   }
+
+  deposit(): Decimal {
+    throw new ConflictException('Closed account is immutable');
+  }
+  withdraw(): Decimal {
+    throw new ConflictException('Closed account is immutable');
+  }
 }

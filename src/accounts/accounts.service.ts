@@ -54,33 +54,30 @@ export class AccountsService {
     }
   }
 
-  async updateAccount(
-    accountId: string,
-    dto: UpdateAccountDto,
-    user: { id: string; role: UserRole },
-  ) {
-    const account = await this.db.account.findUnique({
-      where: { id: accountId },
-    });
-    if (!account) throw new NotFoundException();
+  // async updateAccount(
+  //   accountId: string,
+  //   dto: UpdateAccountDto,
+  //   user: { id: string; role: UserRole },
+  // ) {
+  //   const account = await this.db.account.findUnique({
+  //     where: { id: accountId },
+  //   });
+  //   if (!account) throw new NotFoundException();
+  //
+  //   if (user.role === UserRole.CUSTOMER && account.ownerId !== user.id) {
+  //     throw new ForbiddenException();
+  //   }
+  //
+  //   const state = AccountStateFactory.from(account.status);
+  //   const newBalance = state.updateBalance(new Decimal(dto.balance));
+  //
+  //   return this.db.account.update({
+  //     where: { id: accountId },
+  //     data: { balance: newBalance },
+  //   });
+  // }
 
-    if (user.role === UserRole.CUSTOMER && account.ownerId !== user.id) {
-      throw new ForbiddenException();
-    }
-
-    const state = AccountStateFactory.from(account.status);
-    const newBalance = state.updateBalance(new Decimal(dto.balance));
-
-    return this.db.account.update({
-      where: { id: accountId },
-      data: { balance: newBalance },
-    });
-  }
-
-  async closeAccount(
-    accountId: string,
-    user: { id: string; role: UserRole },
-  ) {
+  async closeAccount(accountId: string, user: { id: string; role: UserRole }) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });
@@ -99,10 +96,7 @@ export class AccountsService {
     });
   }
 
-  async changeAccountStatus(
-    accountId: string,
-    newStatus: AccountStatus,
-  ) {
+  async changeAccountStatus(accountId: string, newStatus: AccountStatus) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });

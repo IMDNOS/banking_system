@@ -11,7 +11,7 @@ export class AccountComposite implements AccountComponent {
     private account: Account,
     subAccounts: Account[],
   ) {
-    this.children = subAccounts.map(acc => new AccountLeaf(acc));
+    this.children = subAccounts.map((acc) => new AccountLeaf(acc));
   }
 
   getBalance(): Decimal {
