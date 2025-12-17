@@ -4,10 +4,11 @@ import { ConflictException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export class ActiveState implements AccountState {
-  updateBalance(balance: Decimal) {
+  updateBalance(balance: Decimal): Decimal {
     return balance;
   }
-  close(balance: Decimal) {
+
+  close(balance: Decimal): AccountStatus {
     if (balance.gt(0)) {
       throw new ConflictException('Cannot close account with balance');
     }

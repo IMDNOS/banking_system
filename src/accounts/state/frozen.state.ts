@@ -1,17 +1,18 @@
 import { AccountState } from './account.state';
 import { AccountStatus } from '@prisma/client';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 
-
 export class FrozenState implements AccountState {
-
   updateBalance(): Decimal {
-    throw new ConflictException('can not update balance of frozen account' );
+    throw new ConflictException('Cannot update frozen account');
   }
 
-  close():AccountStatus {
-    throw new BadRequestException('Account already closed');
+  close(balance: Decimal): AccountStatus {
+    if (balance.gt(0)) {
+      throw new ConflictException('Cannot close account with balance');
+    }
+    return AccountStatus.CLOSED;
   }
 
   changeStatus(newStatus: AccountStatus): AccountStatus {

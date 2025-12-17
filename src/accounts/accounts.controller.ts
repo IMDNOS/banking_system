@@ -59,4 +59,20 @@ export class AccountsController {
   ) {
     return this.accounts.changeAccountStatus(accountId, dto.status);
   }
+
+  @Get(':id/balance')
+  getBalance(@Param('id') id: string) {
+    return this.accounts.getAggregatedBalance(id);
+  }
+
+  @Post(':id/close-hierarchy')
+  @Roles(UserRole.CUSTOMER, UserRole.MANAGER)
+  closeHierarchy(@Param('id') id: string, @Req() req: any) {
+    return this.accounts.closeAccountHierarchy(id, req.user);
+  }
+
+  @Put(':id/freeze-hierarchy')
+  freezeHierarchy(@Param('id') id: string) {
+    return this.accounts.freezeHierarchy(id);
+  }
 }

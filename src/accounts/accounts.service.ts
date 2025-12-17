@@ -8,12 +8,13 @@ import { PrismaService } from '../prisma.service';
 import { SavingsAccountFactory } from './factory/savings.factory';
 import { CheckingAccountFactory } from './factory/checking.factory';
 import { LoanAccountFactory } from './factory/loan.factory';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { AccountStatus, UserRole } from '@prisma/client';
 import { InvestmentAccountFactory } from './factory/investment.factory';
+import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { AccountStateFactory } from './state/account.state.factory';
+import { AccountStatus, UserRole } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { AccountStateFactory } from './state/account.state.factory';
+import { AccountCompositeFactory } from './composite/account-composite.factory';
 
 @Injectable()
 export class AccountsService {
@@ -35,37 +36,19 @@ export class AccountsService {
     });
   }
 
-  // 🔐 VISIBILITY RULES LIVE HERE
   async getAccountsForUser(user: { id: string; role: UserRole }) {
     switch (user.role) {
       case UserRole.CUSTOMER:
-        // 👤 Customers see ONLY their own accounts
         return this.db.account.findMany({
           where: { ownerId: user.id },
         });
-
       case UserRole.TELLER:
-        return this.db.account.findMany({
-          where: {
-            owner: {
-              role: UserRole.CUSTOMER,
-            },
-          },
-        });
       case UserRole.MANAGER:
-        // 🧑‍💼 Staff see customer accounts only
         return this.db.account.findMany({
-          where: {
-            owner: {
-              role: UserRole.CUSTOMER,
-            },
-          },
+          where: { owner: { role: UserRole.CUSTOMER } },
         });
-
       case UserRole.ADMIN:
-        //  Admin sees everything
         return this.db.account.findMany();
-
       default:
         return [];
     }
@@ -79,66 +62,106 @@ export class AccountsService {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });
-
     if (!account) throw new NotFoundException();
-
-    // 🔒 STATE RULE
-    const status = AccountStateFactory.from(account.status);
-
-    // 🔐 OWNERSHIP RULE
-    if (user.role === UserRole.CUSTOMER && account.ownerId !== user.id) {
-      throw new ForbiddenException();
-    }
-
-    return this.db.account.update({
-      where: { id: accountId },
-      data: { balance: status.updateBalance(new Decimal(dto.balance)) },
-    });
-  }
-
-  async closeAccount(accountId: string, user: { id: string; role: UserRole }) {
-    const account = await this.db.account.findUnique({
-      where: { id: accountId },
-    });
-
-    if (!account) throw new NotFoundException();
-
-    const status = AccountStateFactory.from(account.status);
-
-    // if (account.status !== AccountStatus.ACTIVE) {
-    //   throw new BadRequestException('Account is not active');
-    // }
-    //
-    // if (+account.balance !== 0) {
-    //   throw new BadRequestException('Balance must be zero');
-    // }
 
     if (user.role === UserRole.CUSTOMER && account.ownerId !== user.id) {
       throw new ForbiddenException();
     }
 
+    const state = AccountStateFactory.from(account.status);
+    const newBalance = state.updateBalance(new Decimal(dto.balance));
+
     return this.db.account.update({
       where: { id: accountId },
-      data: { status: status.close(account.balance) },
+      data: { balance: newBalance },
     });
   }
 
-  async changeAccountStatus(accountId: string, newStatus: AccountStatus) {
+  async closeAccount(
+    accountId: string,
+    user: { id: string; role: UserRole },
+  ) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });
-
     if (!account) throw new NotFoundException();
 
-    // if (account.status === AccountStatus.CLOSED) {
-    //   throw new BadRequestException('Closed accounts are immutable');
-    // }
-    const state=AccountStateFactory.from(account.status);
+    if (user.role === UserRole.CUSTOMER && account.ownerId !== user.id) {
+      throw new ForbiddenException();
+    }
 
+    const state = AccountStateFactory.from(account.status);
+    const newStatus = state.close(account.balance);
 
     return this.db.account.update({
       where: { id: accountId },
-      data: { status: state.changeStatus(newStatus) },
+      data: { status: newStatus },
     });
+  }
+
+  async changeAccountStatus(
+    accountId: string,
+    newStatus: AccountStatus,
+  ) {
+    const account = await this.db.account.findUnique({
+      where: { id: accountId },
+    });
+    if (!account) throw new NotFoundException();
+
+    const state = AccountStateFactory.from(account.status);
+    const next = state.changeStatus(newStatus);
+
+    return this.db.account.update({
+      where: { id: accountId },
+      data: { status: next },
+    });
+  }
+
+  async getAggregatedBalance(accountId: string) {
+    const component = await AccountCompositeFactory.build(this.db, accountId);
+    return {
+      accountId,
+      balance: component.getBalance(),
+    };
+  }
+
+  async closeAccountHierarchy(
+    accountId: string,
+    user: { id: string; role: UserRole },
+  ) {
+    const root = await this.db.account.findUnique({
+      where: { id: accountId },
+    });
+    if (!root) throw new NotFoundException();
+
+    if (user.role === UserRole.CUSTOMER && root.ownerId !== user.id) {
+      throw new ForbiddenException();
+    }
+
+    const component = await AccountCompositeFactory.build(this.db, accountId);
+    const updates = component.close();
+
+    return this.db.$transaction(
+      Array.from(updates.entries()).map(([id, status]) =>
+        this.db.account.update({
+          where: { id },
+          data: { status },
+        }),
+      ),
+    );
+  }
+
+  async freezeHierarchy(accountId: string) {
+    const component = await AccountCompositeFactory.build(this.db, accountId);
+    const updates = component.changeStatus(AccountStatus.FROZEN);
+
+    return this.db.$transaction(
+      Array.from(updates.entries()).map(([id, status]) =>
+        this.db.account.update({
+          where: { id },
+          data: { status },
+        }),
+      ),
+    );
   }
 }

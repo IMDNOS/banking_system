@@ -10,12 +10,12 @@ export class AccountStateFactory {
     switch (status) {
       case AccountStatus.ACTIVE:
         return new ActiveState();
-      case AccountStatus.CLOSED:
-        return new ClosedState();
       case AccountStatus.FROZEN:
         return new FrozenState();
       case AccountStatus.SUSPENDED:
         return new SuspendedState();
+      case AccountStatus.CLOSED:
+        return new ClosedState();
       default:
         throw new Error('Unknown state');
     }
