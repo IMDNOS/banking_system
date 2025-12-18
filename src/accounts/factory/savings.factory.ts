@@ -8,6 +8,7 @@ export class SavingsAccountFactory implements AccountCreator {
       account_number: crypto.randomUUID(),
       category: AccountCategory.SAVINGS,
       balance: dto.initialBalance ?? 0,
+      interestRate: dto.interestRate,
       owner: { connect: { id: dto.ownerId } },
     };
   }

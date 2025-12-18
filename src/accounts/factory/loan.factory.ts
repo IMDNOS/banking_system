@@ -8,6 +8,7 @@ export class LoanAccountFactory implements AccountCreator {
       account_number: crypto.randomUUID(),
       category: AccountCategory.LOAN,
       balance: -Math.abs(dto.initialBalance ?? 0),
+      interestRate: dto.interestRate,
       owner: { connect: { id: dto.ownerId } },
     };
   }

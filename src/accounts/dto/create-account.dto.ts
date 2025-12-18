@@ -4,6 +4,7 @@ import {
   IsString,
   IsUUID,
   IsNumber,
+  IsNotEmpty,
 } from 'class-validator';
 import { AccountCategory } from '@prisma/client';
 
@@ -17,4 +18,13 @@ export class CreateAccountDto {
   @IsOptional()
   @IsNumber()
   initialBalance?: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  interestRate: number;
+
+  @IsOptional()
+  @IsNumber()
+  expectedReturn?:number
+
 }

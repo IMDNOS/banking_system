@@ -4,9 +4,16 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [AuthModule, UsersModule, AccountsModule, TransactionsModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    AuthModule,
+    UsersModule,
+    AccountsModule,
+    TransactionsModule,
+  ],
   providers: [PrismaService],
 })
 export class AppModule {}

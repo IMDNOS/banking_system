@@ -8,6 +8,7 @@ export class CheckingAccountFactory implements AccountCreator {
       account_number: crypto.randomUUID(),
       category: AccountCategory.CHECKING,
       balance: dto.initialBalance ?? 0,
+      interestRate: dto.interestRate,
       owner: { connect: { id: dto.ownerId } },
     };
   }

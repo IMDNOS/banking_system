@@ -60,6 +60,9 @@ model Account {
   status         AccountStatus   @default(ACTIVE)
   category       AccountCategory
 
+  interestRate   Decimal
+  expectedReturn Decimal?
+
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id])
 
