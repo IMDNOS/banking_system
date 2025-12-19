@@ -5,7 +5,6 @@ import {
   UseGuards,
   Get,
   Req,
-  Patch,
   Param,
   Put,
 } from '@nestjs/common';
@@ -15,7 +14,6 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangeAccountStatusDto } from './dto/change-account-status.dto';
 
 @UseGuards(JwtGuard, RolesGuard)

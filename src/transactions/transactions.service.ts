@@ -9,6 +9,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { TransactionStatus, TransactionType, UserRole } from '@prisma/client';
 import { AccountStateFactory } from '../accounts/state/account.state.factory';
 import { ApprovalChainFactory } from './approval/approval-chain.factory';
+import { PushNotification } from '../notifications/adapter/push-notification';
 
 @Injectable()
 export class TransactionsService {
@@ -17,19 +18,17 @@ export class TransactionsService {
   // =========================
   // DEPOSIT
   // =========================
-  async deposit(
-    accountId: string,
-    amount: number,
-  ) {
+  async deposit(accountId: string, amount: number) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
+      include: { owner: true },
     });
     if (!account) throw new NotFoundException();
 
     const state = AccountStateFactory.from(account.status);
     const newBalance = state.deposit(account.balance, new Decimal(amount));
 
-    return this.db.$transaction([
+    const [, tx] = await this.db.$transaction([
       this.db.account.update({
         where: { id: accountId },
         data: { balance: newBalance },
@@ -43,20 +42,34 @@ export class TransactionsService {
         },
       }),
     ]);
+
+    PushNotification(
+      {
+        account_id: accountId,
+        email: account.owner.email,
+        phone_number: account.owner.phone_number,
+        message: `Deposit of ${amount} was successful`,
+        transaction_id: tx.id,
+      },
+      {
+        email: account.owner.notifyByEmail,
+        sms: account.owner.notifyBySMS,
+        whatsapp: account.owner.notifyByWhatsapp,
+      },
+    );
+
+    return tx;
   }
 
   // =========================
   // WITHDRAW
   // =========================
-  async withdraw(
-    accountId: string,
-    amount: number,
-  ) {
+  async withdraw(accountId: string, amount: number) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
+      include: { owner: true },
     });
     if (!account) throw new NotFoundException();
-
 
     if (account.balance.lt(amount)) {
       throw new BadRequestException('Insufficient funds');
@@ -65,7 +78,7 @@ export class TransactionsService {
     const state = AccountStateFactory.from(account.status);
     const newBalance = state.withdraw(account.balance, new Decimal(amount));
 
-    return this.db.$transaction([
+    const [, tx] = await this.db.$transaction([
       this.db.account.update({
         where: { id: accountId },
         data: { balance: newBalance },
@@ -79,6 +92,23 @@ export class TransactionsService {
         },
       }),
     ]);
+
+    PushNotification(
+      {
+        account_id: accountId,
+        email: account.owner.email,
+        phone_number: account.owner.phone_number,
+        message: `Withdrawal of ${amount} was successful`,
+        transaction_id: tx.id,
+      },
+      {
+        email: account.owner.notifyByEmail,
+        sms: account.owner.notifyBySMS,
+        whatsapp: account.owner.notifyByWhatsapp,
+      },
+    );
+
+    return tx;
   }
 
   // =========================
@@ -91,14 +121,35 @@ export class TransactionsService {
   ) {
     const decimalAmount = new Decimal(amount);
 
+    // =========================
+    // APPROVAL CHAIN
+    // =========================
     const approvalChain = ApprovalChainFactory.create();
-    const status = approvalChain.handle({
-      amount: decimalAmount,
-    });
+    const status = approvalChain.handle({ amount: decimalAmount });
 
-    // 🚦 If approval is required -> save and STOP
+    // =========================
+    // FETCH ACCOUNTS + OWNERS
+    // =========================
+    const [fromAccount, toAccount] = await Promise.all([
+      this.db.account.findUnique({
+        where: { id: fromAccountId },
+        include: { owner: true },
+      }),
+      this.db.account.findUnique({
+        where: { id: toAccountId },
+        include: { owner: true },
+      }),
+    ]);
+
+    if (!fromAccount || !toAccount) {
+      throw new NotFoundException();
+    }
+
+    // =========================
+    // PENDING APPROVAL
+    // =========================
     if (status !== TransactionStatus.APPROVED) {
-      return this.db.transaction.create({
+      const tx = await this.db.transaction.create({
         data: {
           type: TransactionType.TRANSFER,
           amount: decimalAmount,
@@ -107,26 +158,41 @@ export class TransactionsService {
           toAccountId,
         },
       });
+
+      PushNotification(
+        {
+          account_id: fromAccountId,
+          email: fromAccount.owner.email,
+          phone_number: fromAccount.owner.phone_number,
+          message: `Transfer of ${amount} is pending approval`,
+          transaction_id: tx.id,
+        },
+        {
+          email: fromAccount.owner.notifyByEmail,
+          sms: fromAccount.owner.notifyBySMS,
+          whatsapp: fromAccount.owner.notifyByWhatsapp,
+        },
+      );
+
+      return tx;
     }
 
     // =========================
-    // EXECUTION (only if COMPLETED)
+    // EXECUTION (APPROVED)
     // =========================
+    const fromState = AccountStateFactory.from(fromAccount.status);
+    const toState = AccountStateFactory.from(toAccount.status);
 
-    const [from, to] = await Promise.all([
-      this.db.account.findUnique({ where: { id: fromAccountId } }),
-      this.db.account.findUnique({ where: { id: toAccountId } }),
-    ]);
+    const newFromBalance = fromState.withdraw(
+      fromAccount.balance,
+      decimalAmount,
+    );
+    const newToBalance = toState.deposit(
+      toAccount.balance,
+      decimalAmount,
+    );
 
-    if (!from || !to) throw new NotFoundException();
-
-    const fromState = AccountStateFactory.from(from.status);
-    const toState = AccountStateFactory.from(to.status);
-
-    const newFromBalance = fromState.withdraw(from.balance, decimalAmount);
-    const newToBalance = toState.deposit(to.balance, decimalAmount);
-
-    return this.db.$transaction([
+    const [, , tx] = await this.db.$transaction([
       this.db.account.update({
         where: { id: fromAccountId },
         data: { balance: newFromBalance },
@@ -145,6 +211,44 @@ export class TransactionsService {
         },
       }),
     ]);
+
+    // =========================
+    // NOTIFY SENDER
+    // =========================
+    PushNotification(
+      {
+        account_id: fromAccountId,
+        email: fromAccount.owner.email,
+        phone_number: fromAccount.owner.phone_number,
+        message: `You sent ${amount} to account ${toAccount.account_number}`,
+        transaction_id: tx.id,
+      },
+      {
+        email: fromAccount.owner.notifyByEmail,
+        sms: fromAccount.owner.notifyBySMS,
+        whatsapp: fromAccount.owner.notifyByWhatsapp,
+      },
+    );
+
+    // =========================
+    // NOTIFY RECEIVER
+    // =========================
+    PushNotification(
+      {
+        account_id: toAccountId,
+        email: toAccount.owner.email,
+        phone_number: toAccount.owner.phone_number,
+        message: `You received ${amount} from account ${fromAccount.account_number}`,
+        transaction_id: tx.id,
+      },
+      {
+        email: toAccount.owner.notifyByEmail,
+        sms: toAccount.owner.notifyBySMS,
+        whatsapp: toAccount.owner.notifyByWhatsapp,
+      },
+    );
+
+    return tx;
   }
 
   // =========================

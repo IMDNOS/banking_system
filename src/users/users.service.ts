@@ -27,6 +27,7 @@ export class UsersService {
       data: {
         full_name: dto.full_name,
         email: dto.email,
+        phone_number: dto.phone_number,
         role: dto.role,
         password_hash: bcrypt.hashSync(dto.password, 10),
       },

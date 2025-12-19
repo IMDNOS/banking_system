@@ -40,17 +40,23 @@ enum UserRole {
 // =========================
 
 model User {
-  id            String   @id @default(uuid())
-  full_name     String
-  email         String   @unique
-  password_hash String
-  role          UserRole
+  id               String   @id @default(uuid())
+  full_name        String
+  email            String   @unique
+  phone_number     String   @unique
+  password_hash    String
+  role             UserRole
+  notifyByEmail    Boolean  @default(true)
+  notifyBySMS      Boolean  @default(true)
+  notifyByWhatsapp Boolean  @default(true)
 
   accounts Account[]
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Transaction Transaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Transaction Transaction[]
+
+  approvedTo Transaction[] @relation("approvedBy")
 }
 
 model Account {
@@ -114,6 +120,9 @@ model Transaction {
   amount Decimal
   status TransactionStatus
 
+  approvedById String?
+  approvedBy   User?   @relation("approvedBy", fields: [approvedById], references: [id])
+
   fromAccountId String?
   fromAccount   Account? @relation("FromAccount", fields: [fromAccountId], references: [id])
 
@@ -121,8 +130,8 @@ model Transaction {
   toAccount   Account? @relation("ToAccount", fields: [toAccountId], references: [id])
 
   createdAt DateTime @default(now())
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?
+  // User      User?    @relation(fields: [userId], references: [id])
+  // userId    String?
 
   notifications notifications[]
 }
