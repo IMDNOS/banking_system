@@ -7,6 +7,8 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationsModule } from './notifications/notifications.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtGuard } from './auth/guards/jwt.guard';
 
 @Module({
   imports: [
@@ -20,6 +22,12 @@ import { NotificationsModule } from './notifications/notifications.module';
     TransactionsModule,
     NotificationsModule,
   ],
-  providers: [PrismaService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtGuard,
+    },
+    PrismaService,
+  ],
 })
 export class AppModule {}

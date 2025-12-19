@@ -1,4 +1,3 @@
-// accounts/interest/interest.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { InterestStrategyFactory } from './interest-strategy.factory';

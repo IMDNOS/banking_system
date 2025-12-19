@@ -10,9 +10,7 @@ import { CheckingAccountFactory } from './factory/checking.factory';
 import { LoanAccountFactory } from './factory/loan.factory';
 import { InvestmentAccountFactory } from './factory/investment.factory';
 import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
 import { AccountStatus, UserRole } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
 import { AccountStateFactory } from './state/account.state.factory';
 import { AccountCompositeFactory } from './composite/account-composite.factory';
 

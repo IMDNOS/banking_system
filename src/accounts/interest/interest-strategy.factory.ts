@@ -1,10 +1,9 @@
-// accounts/interest/interest-strategy.factory.ts
 import { AccountCategory } from '@prisma/client';
 import { InterestStrategy } from './interest.strategy';
-import { SavingsInterestStrategy } from './savings-interest.strategy';
-import { CheckingInterestStrategy } from './checking-interest.strategy';
-import { LoanInterestStrategy } from './loan-interest.strategy';
-import { InvestmentInterestStrategy } from './investment-interest.strategy';
+import { SavingsInterestStrategy } from './concrete/savings-interest.strategy';
+import { CheckingInterestStrategy } from './concrete/checking-interest.strategy';
+import { LoanInterestStrategy } from './concrete/loan-interest.strategy';
+import { InvestmentInterestStrategy } from './concrete/investment-interest.strategy';
 
 export class InterestStrategyFactory {
   static get(category: AccountCategory): InterestStrategy {

@@ -1,5 +1,5 @@
 // accounts/interest/savings-interest.strategy.ts
-import { InterestStrategy, InterestContext } from './interest.strategy';
+import { InterestStrategy, InterestContext } from '../interest.strategy';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export class SavingsInterestStrategy implements InterestStrategy {
