@@ -5,10 +5,13 @@ import { UserRole } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 
 // dashboard.controller.ts
-@Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboard: DashboardService,private audit: AuditService) {}
+  constructor(
+    private readonly dashboard: DashboardService,
+    private audit: AuditService,
+  ) {}
 
   @Get('health')
   getHealth() {
@@ -34,4 +37,3 @@ export class DashboardController {
     return this.dashboard.failedTransactions();
   }
 }
-

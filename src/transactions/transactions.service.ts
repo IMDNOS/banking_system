@@ -314,6 +314,12 @@ export class TransactionsService {
 
     if (!tx) throw new NotFoundException();
 
+    if (
+      tx.status !== TransactionStatus.REQUIRES_MANAGER &&  tx.status !== TransactionStatus.REQUIRES_ADMIN
+    )
+      throw new ConflictException(`transaction is already `+ tx.status );
+
+
     // 🔐 Role enforcement
     if (
       tx.status === TransactionStatus.REQUIRES_MANAGER &&

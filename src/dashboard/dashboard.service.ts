@@ -76,11 +76,11 @@ export class DashboardService {
   }
 
 
-  async failedTransactions(limit = 10) {
+  async failedTransactions() {
     return this.db.transaction.findMany({
       where: { status: TransactionStatus.REJECTED },
       orderBy: { createdAt: 'desc' },
-      take: limit,
+      // take: limit,
     });
   }
 
