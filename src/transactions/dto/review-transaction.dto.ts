@@ -2,7 +2,6 @@ import { IsEnum, IsUUID } from 'class-validator';
 import { TransactionStatus } from '@prisma/client';
 
 export class ReviewTransactionDto {
-
   @IsUUID()
   transactionId: string;
 

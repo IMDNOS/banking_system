@@ -22,7 +22,7 @@ export class AdminAccountsController {
 
   @Post()
   create(@Req() req: any, @Body() dto: CreateAccountDto) {
-    return this.accounts.createAccount(req.user.accountId,dto);
+    return this.accounts.createAccount(req.user.accountId, dto);
   }
 
   @Put(':id/status')

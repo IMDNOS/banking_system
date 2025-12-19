@@ -5,6 +5,6 @@ import { PrismaService } from '../prisma.service';
 
 @Module({
   controllers: [AuditController],
-  providers: [AuditService,PrismaService],
+  providers: [AuditService, PrismaService],
 })
 export class AuditModule {}

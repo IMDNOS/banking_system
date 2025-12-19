@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,6 +21,14 @@ export class UsersService {
     dto: CreateUserDto,
     creatorRole: UserRole,
   ) {
+    const staff = await this.db.account.findUnique({
+      where: { id: staff_id },
+      select: { id: true, ownerId: true },
+    });
+    if (!staff) {
+      throw new ForbiddenException('staff not found');
+    }
+
     // 🔒 Enforce role hierarchy
     if (creatorRole === UserRole.MANAGER) {
       if (dto.role === UserRole.ADMIN || dto.role === UserRole.MANAGER) {
@@ -24,6 +36,15 @@ export class UsersService {
           'Managers can only create customers or tellers',
         );
       }
+    }
+
+    const emailExists=await this.db.user.findUnique({where:{email:dto.email}})
+    const phone_number = await this.db.user.findUnique({where:{phone_number:dto.phone_number}})
+    if ( emailExists) {
+      throw new ConflictException('email already exists');
+    }
+    if ( phone_number) {
+      throw new ConflictException('phone_number already exists');
     }
 
     const user = await this.db.user.create({
@@ -40,7 +61,7 @@ export class UsersService {
       action: AuditAction.CREATE,
       entityType: 'User',
       entityId: user.id,
-      performedById: staff_id,
+      performedById: staff.ownerId,
       metadata: {
         full_name: user.full_name,
         email: user.email,

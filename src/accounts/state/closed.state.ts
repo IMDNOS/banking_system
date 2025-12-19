@@ -22,5 +22,4 @@ export class ClosedState implements AccountState {
   withdraw(): Decimal {
     throw new ConflictException('Closed account is immutable');
   }
-
 }

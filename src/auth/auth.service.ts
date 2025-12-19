@@ -24,7 +24,7 @@ export class AuthService {
           select: {
             id: true,
             account_number: true,
-            category:true
+            category: true,
           },
         },
       },
@@ -44,11 +44,11 @@ export class AuthService {
 
     // ✅ JWT can optionally include activeAccountId
     return {
-      full_name:user.full_name,
-      email:user.email,
-      phone_number:user.phone_number,
-      role:user.role,
-      account_category:account.category,
+      full_name: user.full_name,
+      email: user.email,
+      phone_number: user.phone_number,
+      role: user.role,
+      account_category: account.category,
       access_token: this.jwt.sign({
         sub: user.id,
         role: user.role,
@@ -56,5 +56,4 @@ export class AuthService {
       }),
     };
   }
-
 }

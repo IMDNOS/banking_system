@@ -4,7 +4,7 @@ export type NotificationData = {
   phone_number: string;
   message: string;
   transaction_id: string;
-}
+};
 
 export interface Notification {
   send(data: NotificationData): void; // Updated to accept data

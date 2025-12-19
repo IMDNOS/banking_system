@@ -3,7 +3,6 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { IsPublic } from './decorators/public.decorator';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
@@ -11,6 +10,6 @@ export class AuthController {
   @IsPublic()
   @Post('login')
   login(@Body() dto: LoginDto) {
-    return this.auth.login(dto.email, dto.password,dto.accountNumber);
+    return this.auth.login(dto.email, dto.password, dto.accountNumber);
   }
 }

@@ -29,10 +29,12 @@ export class InterestService {
       baseRate,
       accountRate: account.interestRate, // stored per account/product
       riskPremium: account.category === 'LOAN' ? 0.02 : 0, // example
-      expectedReturn: account.expectedReturn ? account.expectedReturn : undefined
-        // account.category === 'INVESTMENT'
-        //   ? account.expectedReturn
-        //   : undefined,
+      expectedReturn: account.expectedReturn
+        ? account.expectedReturn
+        : undefined,
+      // account.category === 'INVESTMENT'
+      //   ? account.expectedReturn
+      //   : undefined,
     });
   }
 

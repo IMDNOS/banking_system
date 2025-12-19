@@ -14,7 +14,7 @@ export class UserAccountsController {
   }
 
   @Get('balance')
-  getBalance( @Req() req: any) {
+  getBalance(@Req() req: any) {
     return this.accounts.getAggregatedBalance(req.user.accountId);
   }
 

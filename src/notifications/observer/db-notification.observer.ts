@@ -6,8 +6,11 @@ import { PrismaService } from '../../prisma.service';
 export class DbNotificationObserver implements NotificationObserver {
   constructor(private readonly db: PrismaService) {}
 
-   onNotificationSent(data: NotificationData) {
-     this.db.notifications.create({
+  async onNotificationSent(
+    data: NotificationData,
+    channels: Array<'email' | 'sms' | 'whatsapp'>,
+  ): Promise<void> {
+    await this.db.notifications.create({
       data: {
         account_id: data.account_id,
         message: data.message,

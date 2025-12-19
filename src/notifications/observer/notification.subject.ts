@@ -10,12 +10,12 @@ export class NotificationSubject {
   }
 
   detach(observer: NotificationObserver): void {
-    this.observers = this.observers.filter(o => o !== observer);
+    this.observers = this.observers.filter((o) => o !== observer);
   }
 
   notify(
     data: NotificationData,
-    channels: Array<'email' | 'sms' | 'whatsapp'>
+    channels: Array<'email' | 'sms' | 'whatsapp'>,
     // methods:{email: boolean, sms: boolean, whatsapp: boolean}
   ): void {
     for (const observer of this.observers) {

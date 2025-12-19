@@ -6,7 +6,6 @@ import { AuthController } from './auth.controller';
 import { PrismaService } from '../prisma.service';
 import { ConfigService } from '@nestjs/config';
 
-
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -16,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
         // secret: 'secret',
         signOptions: { expiresIn: '1d' },
       }),
-    })
+    }),
   ],
   providers: [AuthService, JwtStrategy, PrismaService],
   controllers: [AuthController],

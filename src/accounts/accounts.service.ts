@@ -39,16 +39,26 @@ export class AccountsService {
     if (!owner) {
       throw new BadRequestException('Account does not exist');
     }
+    console.log(staff_id);
+    const staffAccount = await this.db.account.findUnique({
+      where: { id: staff_id },
+      select: { id: true, ownerId: true },
+    });
+    if (!staffAccount)
+      throw new ForbiddenException('staffAccount does not exist');
 
     let parentAccountId: string | undefined;
 
     if (dto.parent_account_number) {
       const parentAccount = await this.db.account.findUnique({
         where: { account_number: dto.parent_account_number },
-        select: { id: true },
+        select: { id: true, ownerId: true },
       });
       if (!parentAccount) {
         throw new BadRequestException('Parent account does not exist');
+      }
+      if (parentAccount.ownerId !== dto.ownerId) {
+        throw new BadRequestException('parent is for a different user');
       }
       parentAccountId = parentAccount.id;
     }
@@ -61,7 +71,7 @@ export class AccountsService {
       action: AuditAction.CREATE,
       entityType: 'Account',
       entityId: account.id,
-      performedById: staff_id,
+      performedById: staffAccount.ownerId,
       metadata: {
         ownerId: dto.ownerId,
         category: dto.category,
@@ -135,7 +145,11 @@ export class AccountsService {
     });
   }
 
-  async changeAccountStatus(adminId:string,accountId: string, newStatus: AccountStatus) {
+  async changeAccountStatus(
+    adminId: string,
+    accountId: string,
+    newStatus: AccountStatus,
+  ) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });

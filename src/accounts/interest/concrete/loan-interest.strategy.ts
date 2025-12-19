@@ -9,7 +9,7 @@ export class LoanInterestStrategy implements InterestStrategy {
     accountRate,
     riskPremium = 0,
   }: InterestContext): Decimal {
-    const apr =   accountRate.add(baseRate).add(riskPremium);
+    const apr = accountRate.add(baseRate).add(riskPremium);
     const rate = apr.div(12);
 
     return balance.mul(rate);

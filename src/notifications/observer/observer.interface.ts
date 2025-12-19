@@ -5,6 +5,6 @@ export interface NotificationObserver {
   onNotificationSent(
     data: NotificationData,
     // methods:{email: boolean, sms: boolean, whatsapp: boolean}
-    channels: Array<'email' | 'sms' | 'whatsapp'>
+    channels: Array<'email' | 'sms' | 'whatsapp'>,
   ): void;
 }

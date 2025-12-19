@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
@@ -34,7 +28,7 @@ export class UserTransactionsController {
   }
 
   @Get('account_history')
-  history( @Req() req: any) {
+  history(@Req() req: any) {
     return this.tx.getAccountTransactions(req.user.accountId, req.user);
   }
 }

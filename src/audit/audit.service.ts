@@ -15,7 +15,6 @@ export class AuditService {
     const page = dto_page ? +dto_page : 1;
     const limit = dto_limit ? +dto_limit : 10;
 
-
     const skip = (page - 1) * limit;
 
     const where = {
@@ -51,7 +50,6 @@ export class AuditService {
     performedById?: string;
     metadata?: Record<string, any>;
     ipAddress?: string;
-    userAgent?: string;
   }) {
     return this.db.auditLog.create({
       data: {
@@ -61,7 +59,6 @@ export class AuditService {
         performedById: params.performedById,
         metadata: params.metadata ?? {},
         ipAddress: params.ipAddress,
-        userAgent: params.userAgent,
       },
     });
   }

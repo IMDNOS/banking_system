@@ -9,9 +9,9 @@ export class LoanAccountFactory implements AccountCreator {
       balance: -Math.abs(dto.initialBalance ?? 0),
       interestRate: dto.interestRate,
       owner: { connect: { id: dto.ownerId } },
-      parentAccount:{
-        connect: { account_number:dto.parent_account_number },
-      }
+      parentAccount: dto.parent_account_number
+        ? { connect: { account_number: dto.parent_account_number } }
+        : undefined,
     };
   }
 }

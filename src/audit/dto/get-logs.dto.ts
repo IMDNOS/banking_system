@@ -1,4 +1,4 @@
-import { IsOptional, IsString} from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class GetLogsDto {
   @IsOptional()
@@ -15,5 +15,5 @@ export class GetLogsDto {
 
   @IsOptional()
   @IsString()
-  limit?:string;
+  limit?: string;
 }

@@ -25,9 +25,9 @@ export class CreateAccountDto {
 
   @IsOptional()
   @IsNumber()
-  expectedReturn?:number
+  expectedReturn?: number;
 
   @IsOptional()
   @IsNumber()
-  parent_account_number?:number
+  parent_account_number?: number;
 }
