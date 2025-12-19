@@ -57,6 +57,8 @@ model User {
   // Transaction Transaction[]
 
   approvedTo Transaction[] @relation("approvedBy")
+
+  AuditLog AuditLog[]
 }
 
 model Account {
@@ -134,4 +136,32 @@ model Transaction {
   // userId    String?
 
   notifications notifications[]
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  LOGIN
+  STATUS_CHANGE
+  TRANSFER_EXECUTED
+}
+
+model AuditLog {
+  id            String      @id @default(uuid())
+  action        AuditAction
+  entityType    String // "Transaction", "Account", "User"
+  entityId      String
+  performedById String?
+  performedBy   User?       @relation(fields: [performedById], references: [id])
+
+  metadata  Json
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
 }

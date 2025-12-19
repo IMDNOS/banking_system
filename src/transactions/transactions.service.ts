@@ -7,14 +7,23 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import { TransactionStatus, TransactionType, UserRole } from '@prisma/client';
+import {
+  AuditAction,
+  TransactionStatus,
+  TransactionType,
+  UserRole,
+} from '@prisma/client';
 import { AccountStateFactory } from '../accounts/state/account.state.factory';
 import { ApprovalChainFactory } from './approval/approval-chain.factory';
 import { PushNotification } from '../notifications/adapter/push-notification';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private db: PrismaService) {}
+  constructor(
+    private db: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   // =========================
   // DEPOSIT
@@ -325,10 +334,25 @@ export class TransactionsService {
     // Rejection
     // =========================
     if (decision === TransactionStatus.REJECTED) {
-      return this.db.transaction.update({
+      const result = await this.db.transaction.update({
         where: { id: transactionId },
         data: { status: TransactionStatus.REJECTED },
       });
+
+      await this.audit.log({
+        action: AuditAction.REJECT,
+        entityType: 'Transaction',
+        entityId: transactionId,
+        performedById: user.id,
+        metadata: {
+          amount: tx.amount.toString(),
+          fromAccountId: tx.fromAccountId,
+          toAccountId: tx.toAccountId,
+          role: user.role,
+        },
+      });
+
+      return result;
     }
 
     // =========================
@@ -354,7 +378,7 @@ export class TransactionsService {
     const newFromBalance = fromState.withdraw(from.balance, amount);
     const newToBalance = toState.deposit(to.balance, amount);
 
-    return this.db.$transaction([
+    const result = this.db.$transaction([
       this.db.account.update({
         where: { id: from.id },
         data: { balance: newFromBalance },
@@ -370,5 +394,20 @@ export class TransactionsService {
         },
       }),
     ]);
+
+    await this.audit.log({
+      action: AuditAction.APPROVE,
+      entityType: 'Transaction',
+      entityId: transactionId,
+      performedById: user.id,
+      metadata: {
+        amount: tx.amount.toString(),
+        fromAccountId: tx.fromAccountId,
+        toAccountId: tx.toAccountId,
+        role: user.role,
+      },
+    });
+
+    return result;
   }
 }

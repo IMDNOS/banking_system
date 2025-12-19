@@ -11,6 +11,6 @@ export class UsersController {
 
   @Post()
   create(@Req() req: any, @Body() dto: CreateUserDto) {
-    return this.users.createUser(dto, req.user.role);
+    return this.users.createUser(req.user.accountId,dto, req.user.role);
   }
 }

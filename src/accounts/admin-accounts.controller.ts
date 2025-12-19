@@ -6,6 +6,7 @@ import {
   Put,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -14,29 +15,30 @@ import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ChangeAccountStatusDto } from './dto/change-account-status.dto';
 
-// @UseGuards(RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.TELLER)
 @Controller('admin/accounts')
 export class AdminAccountsController {
   constructor(private readonly accounts: AccountsService) {}
 
-  // ➕ Create account (staff only)
   @Post()
-  create(@Body() dto: CreateAccountDto) {
-    return this.accounts.createAccount(dto);
+  create(@Req() req: any, @Body() dto: CreateAccountDto) {
+    return this.accounts.createAccount(req.user.accountId,dto);
   }
 
-  // 🔄 Change account status (ADMIN only)
   @Put(':id/status')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   changeStatus(
+    @Req() req: any,
     @Param('id') accountId: string,
     @Body() dto: ChangeAccountStatusDto,
   ) {
-    return this.accounts.changeAccountStatus(accountId, dto.status);
+    return this.accounts.changeAccountStatus(
+      req.user.accountId,
+      accountId,
+      dto.status,
+    );
   }
 
-  // ❄️ Freeze entire hierarchy
   @Put(':id/freeze-hierarchy')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   freezeHierarchy(@Param('id') id: string) {

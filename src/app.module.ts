@@ -9,6 +9,8 @@ import { ConfigModule } from '@nestjs/config';
 import { NotificationsModule } from './notifications/notifications.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './auth/guards/jwt.guard';
+import { AuditModule } from './audit/audit.module';
+import { AuditService } from './audit/audit.service';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { JwtGuard } from './auth/guards/jwt.guard';
     AccountsModule,
     TransactionsModule,
     NotificationsModule,
+    AuditModule,
   ],
   providers: [
     {
@@ -28,6 +31,7 @@ import { JwtGuard } from './auth/guards/jwt.guard';
       useClass: JwtGuard,
     },
     PrismaService,
+    AuditService
   ],
 })
 export class AppModule {}

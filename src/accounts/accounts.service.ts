@@ -10,9 +10,10 @@ import { CheckingAccountFactory } from './factory/checking.factory';
 import { LoanAccountFactory } from './factory/loan.factory';
 import { InvestmentAccountFactory } from './factory/investment.factory';
 import { CreateAccountDto } from './dto/create-account.dto';
-import { AccountStatus, UserRole } from '@prisma/client';
+import { AccountStatus, AuditAction, UserRole } from '@prisma/client';
 import { AccountStateFactory } from './state/account.state.factory';
 import { AccountCompositeFactory } from './composite/account-composite.factory';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class AccountsService {
@@ -23,29 +24,55 @@ export class AccountsService {
     INVESTMENT: new InvestmentAccountFactory(),
   };
 
-  constructor(private db: PrismaService) {}
+  constructor(
+    private db: PrismaService,
+    private audit: AuditService,
+  ) {}
 
-  async createAccount(dto: CreateAccountDto) {
+  async createAccount(staff_id: string, dto: CreateAccountDto) {
     const factory = this.factories[dto.category];
     if (!factory) throw new BadRequestException('Invalid account type');
 
-    const owner = await this.db.user.findUnique({ where: { id: dto.ownerId } });
+    const owner = await this.db.user.findUnique({
+      where: { id: dto.ownerId },
+    });
     if (!owner) {
       throw new BadRequestException('Account does not exist');
     }
+
+    let parentAccountId: string | undefined;
 
     if (dto.parent_account_number) {
       const parentAccount = await this.db.account.findUnique({
         where: { account_number: dto.parent_account_number },
         select: { id: true },
       });
-      if (!parentAccount)
-        throw new BadRequestException('Account does not exist');
+      if (!parentAccount) {
+        throw new BadRequestException('Parent account does not exist');
+      }
+      parentAccountId = parentAccount.id;
     }
 
-    return this.db.account.create({
+    const account = await this.db.account.create({
       data: factory.create(dto),
     });
+
+    await this.audit.log({
+      action: AuditAction.CREATE,
+      entityType: 'Account',
+      entityId: account.id,
+      performedById: staff_id,
+      metadata: {
+        ownerId: dto.ownerId,
+        category: dto.category,
+        interestRate: dto.interestRate,
+        expectedReturn: dto.expectedReturn ?? null,
+        initialBalance: dto.initialBalance ?? 0,
+        parentAccountId,
+      },
+    });
+
+    return account;
   }
 
   async getAccountsForUser(user: { id: string; role: UserRole }) {
@@ -108,7 +135,7 @@ export class AccountsService {
     });
   }
 
-  async changeAccountStatus(accountId: string, newStatus: AccountStatus) {
+  async changeAccountStatus(adminId:string,accountId: string, newStatus: AccountStatus) {
     const account = await this.db.account.findUnique({
       where: { id: accountId },
     });
@@ -117,10 +144,23 @@ export class AccountsService {
     const state = AccountStateFactory.from(account.status);
     const next = state.changeStatus(newStatus);
 
-    return this.db.account.update({
+    const result = this.db.account.update({
       where: { id: accountId },
       data: { status: next },
     });
+
+    await this.audit.log({
+      action: AuditAction.STATUS_CHANGE,
+      entityType: 'Account',
+      entityId: accountId,
+      performedById: adminId,
+      metadata: {
+        from: account.status,
+        to: next,
+      },
+    });
+
+    return result;
   }
 
   async getAggregatedBalance(accountId: string) {
