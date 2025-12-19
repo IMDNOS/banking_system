@@ -28,8 +28,8 @@ export class CreateAccountDto {
   expectedReturn?:number
 
   @IsOptional()
-  @IsString()
-  parent_account_number?:string
+  @IsNumber()
+  parent_account_number?:number
 
   @IsOptional()
   @IsString()

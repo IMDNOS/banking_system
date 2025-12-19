@@ -10,7 +10,6 @@ export class InvestmentAccountFactory implements AccountCreator {
     }
 
     return {
-      account_number: crypto.randomUUID(),
       category: AccountCategory.INVESTMENT,
       balance: dto.initialBalance ?? 0,
       interestRate: dto.interestRate,

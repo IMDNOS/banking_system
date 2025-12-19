@@ -10,7 +10,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async login(email: string, password: string, accountNumber: string) {
+  async login(email: string, password: string, accountNumber: number) {
     const user = await this.db.user.findUnique({
       where: { email },
       select: {

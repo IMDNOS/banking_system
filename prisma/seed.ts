@@ -21,7 +21,7 @@ const user= await prisma.user.create({
       balance:0,
       interestRate:0.02,
       expectedReturn:0.05,
-      account_number:'123',
+      account_number:1,
       ownerId:user.id
     },
   });
