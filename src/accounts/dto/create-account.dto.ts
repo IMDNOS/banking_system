@@ -27,4 +27,11 @@ export class CreateAccountDto {
   @IsNumber()
   expectedReturn?:number
 
+  @IsOptional()
+  @IsString()
+  parent_account_number?:string
+
+  @IsOptional()
+  @IsString()
+  parentAccountId:string;
 }

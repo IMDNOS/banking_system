@@ -13,7 +13,9 @@ export class AccountLeaf implements AccountComponent {
   close(): Map<string, AccountStatus> {
     const state = AccountStateFactory.from(this.account.status);
     const next = state.close(this.account.balance);
-    return new Map([[this.account.id, next]]);
+    const map= new Map([[this.account.id, next]]);
+    console.log(map)
+    return map
   }
 
   changeStatus(status: AccountStatus): Map<string, AccountStatus> {

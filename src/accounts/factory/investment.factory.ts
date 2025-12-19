@@ -18,6 +18,9 @@ export class InvestmentAccountFactory implements AccountCreator {
       owner: {
         connect: { id: dto.ownerId },
       },
+      parentAccount:{
+        connect: { id: dto.parentAccountId },
+      }
     };
   }
 }

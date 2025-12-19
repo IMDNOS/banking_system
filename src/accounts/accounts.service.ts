@@ -29,6 +29,21 @@ export class AccountsService {
     const factory = this.factories[dto.category];
     if (!factory) throw new BadRequestException('Invalid account type');
 
+    const owner = await this.db.user.findUnique({ where: { id: dto.ownerId } });
+    if (!owner) {
+      throw new BadRequestException('Account does not exist');
+    }
+
+    if (dto.parent_account_number) {
+      const parentAccount = await this.db.account.findUnique({
+        where: { account_number: dto.parent_account_number },
+        select: { id: true },
+      });
+      if (!parentAccount)
+        throw new BadRequestException('Account does not exist');
+      dto.parentAccountId = parentAccount.id;
+    }
+
     return this.db.account.create({
       data: factory.create(dto),
     });
@@ -117,21 +132,16 @@ export class AccountsService {
     };
   }
 
-  async closeAccountHierarchy(
-    accountId: string,
-    user: { id: string; role: UserRole },
-  ) {
+  async closeAccountHierarchy(accountId: string) {
     const root = await this.db.account.findUnique({
       where: { id: accountId },
     });
     if (!root) throw new NotFoundException();
 
-    if (user.role === UserRole.CUSTOMER && root.ownerId !== user.id) {
-      throw new ForbiddenException();
-    }
-
     const component = await AccountCompositeFactory.build(this.db, accountId);
     const updates = component.close();
+
+    // return updates
 
     return this.db.$transaction(
       Array.from(updates.entries()).map(([id, status]) =>
