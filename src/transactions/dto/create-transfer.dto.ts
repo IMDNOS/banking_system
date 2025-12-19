@@ -1,11 +1,9 @@
-import { IsUUID, IsNumber, Min } from 'class-validator';
+import { IsUUID, IsNumber, Min, IsNotEmpty } from 'class-validator';
 
 export class CreateTransferDto {
-  // @IsUUID()
-  // fromAccountId: string;
-
-  @IsUUID()
-  toAccountId: string;
+  @IsNotEmpty()
+  @IsNumber()
+  toAccountNumber: number;
 
   @IsNumber()
   @Min(0.01)

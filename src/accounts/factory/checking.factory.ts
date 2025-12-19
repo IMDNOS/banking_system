@@ -10,7 +10,7 @@ export class CheckingAccountFactory implements AccountCreator {
       interestRate: dto.interestRate,
       owner: { connect: { id: dto.ownerId } },
       parentAccount:{
-        connect: { id: dto.parentAccountId },
+        connect: { account_number:dto.parent_account_number },
       }
     };
   }

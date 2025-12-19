@@ -41,7 +41,6 @@ export class AccountsService {
       });
       if (!parentAccount)
         throw new BadRequestException('Account does not exist');
-      dto.parentAccountId = parentAccount.id;
     }
 
     return this.db.account.create({

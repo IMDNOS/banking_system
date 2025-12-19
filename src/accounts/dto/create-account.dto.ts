@@ -30,8 +30,4 @@ export class CreateAccountDto {
   @IsOptional()
   @IsNumber()
   parent_account_number?:number
-
-  @IsOptional()
-  @IsString()
-  parentAccountId:string;
 }

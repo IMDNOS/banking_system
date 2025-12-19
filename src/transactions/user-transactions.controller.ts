@@ -29,13 +29,13 @@ export class UserTransactionsController {
   transfer(@Body() dto: CreateTransferDto, @Req() req: any) {
     return this.tx.transfer(
       req.user.accountId,
-      dto.toAccountId,
+      dto.toAccountNumber,
       dto.amount,
     );
   }
 
   @Get('account_history')
   history( @Req() req: any) {
-    return this.tx.getAccountTransactions(req.user.account_id, req.user);
+    return this.tx.getAccountTransactions(req.user.accountId, req.user);
   }
 }

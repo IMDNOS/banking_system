@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -23,7 +24,7 @@ export class TransactionsService {
       where: { id: accountId },
       include: { owner: true },
     });
-    if (!account) throw new NotFoundException();
+    if (!account) throw new BadRequestException('account not found');
 
     const state = AccountStateFactory.from(account.status);
     const newBalance = state.deposit(account.balance, new Decimal(amount));
@@ -69,7 +70,7 @@ export class TransactionsService {
       where: { id: accountId },
       include: { owner: true },
     });
-    if (!account) throw new NotFoundException();
+    if (!account) throw new BadRequestException('account not found');
 
     if (account.balance.lt(amount)) {
       throw new BadRequestException('Insufficient funds');
@@ -116,7 +117,7 @@ export class TransactionsService {
   // =========================
   async transfer(
     fromAccountId: string,
-    toAccountId: string,
+    toAccountNumber: number,
     amount: number,
   ) {
     const decimalAmount = new Decimal(amount);
@@ -136,13 +137,17 @@ export class TransactionsService {
         include: { owner: true },
       }),
       this.db.account.findUnique({
-        where: { id: toAccountId },
+        where: { account_number: toAccountNumber },
         include: { owner: true },
       }),
     ]);
 
     if (!fromAccount || !toAccount) {
-      throw new NotFoundException();
+      throw new BadRequestException('account number not found');
+    }
+
+    if (fromAccount.balance.lt(decimalAmount)) {
+      throw new ConflictException('Insufficient funds');
     }
 
     // =========================
@@ -155,7 +160,7 @@ export class TransactionsService {
           amount: decimalAmount,
           status,
           fromAccountId,
-          toAccountId,
+          toAccountId: toAccount.id,
         },
       });
 
@@ -187,10 +192,7 @@ export class TransactionsService {
       fromAccount.balance,
       decimalAmount,
     );
-    const newToBalance = toState.deposit(
-      toAccount.balance,
-      decimalAmount,
-    );
+    const newToBalance = toState.deposit(toAccount.balance, decimalAmount);
 
     const [, , tx] = await this.db.$transaction([
       this.db.account.update({
@@ -198,7 +200,7 @@ export class TransactionsService {
         data: { balance: newFromBalance },
       }),
       this.db.account.update({
-        where: { id: toAccountId },
+        where: { account_number: toAccountNumber },
         data: { balance: newToBalance },
       }),
       this.db.transaction.create({
@@ -207,7 +209,7 @@ export class TransactionsService {
           amount: decimalAmount,
           status: TransactionStatus.APPROVED,
           fromAccountId,
-          toAccountId,
+          toAccountId: toAccount.id,
         },
       }),
     ]);
@@ -235,7 +237,7 @@ export class TransactionsService {
     // =========================
     PushNotification(
       {
-        account_id: toAccountId,
+        account_id: toAccount.id,
         email: toAccount.owner.email,
         phone_number: toAccount.owner.phone_number,
         message: `You received ${amount} from account ${fromAccount.account_number}`,

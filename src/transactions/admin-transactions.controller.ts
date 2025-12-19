@@ -24,12 +24,8 @@ export class AdminTransactionsController {
     return this.tx.getPendingTransactions(req.user);
   }
 
-  @Post(':id/review')
-  review(
-    @Param('id') id: string,
-    @Body() dto: ReviewTransactionDto,
-    @Req() req: any,
-  ) {
-    return this.tx.reviewTransaction(id, dto.decision, req.user);
+  @Post('review')
+  review(@Body() dto: ReviewTransactionDto, @Req() req: any) {
+    return this.tx.reviewTransaction(dto.transactionId, dto.decision, req.user);
   }
 }
