@@ -85,6 +85,11 @@ export class AccountsService {
     return account;
   }
 
+  getAccounts(){
+    return this.db.account.findMany();
+  }
+
+
   async getAccountsForUser(user: { id: string; role: UserRole }) {
     switch (user.role) {
       case UserRole.CUSTOMER:

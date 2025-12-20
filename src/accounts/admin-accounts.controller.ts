@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Req,
+  Get,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -23,6 +24,12 @@ export class AdminAccountsController {
   @Post()
   create(@Req() req: any, @Body() dto: CreateAccountDto) {
     return this.accounts.createAccount(req.user.accountId, dto);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Get()
+  getusers(){
+    return this.accounts;
   }
 
   @Put(':id/status')

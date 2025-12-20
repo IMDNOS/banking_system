@@ -1,0 +1,13 @@
+services:
+  banking_system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/bank"
+    volumes:
+      - ./src:/usr/src/app/src
